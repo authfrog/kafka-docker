@@ -1,15 +1,31 @@
 version: '2'
 services:
+  dns:
+    image: mgood/resolvable
+    hostname: streaming_dns_1.infra
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+      - /etc/resolv.conf:/tmp/resolv.conf
+    networks:
+      - infra
   zookeeper:
     image: wurstmeister/zookeeper
-    ports:
-      - "2181:2181"
+    hostname: streaming_zookeeper_1.infra
+    networks:
+      - infra
   kafka:
     build: .
-    ports:
-      - "9092"
+    hostname: streaming_kafka_1.infra
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOSTNAME: streaming_kafka_1.infra
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: streaming_zookeeper_1.infra:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - infra
+networks:
+  infra:
+    external:
+      name: infra
